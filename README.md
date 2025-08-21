@@ -7,8 +7,11 @@ A simple public webapp that displays today's Caltrain schedules between Redwood 
 - **Morning Schedule**: Trains from Redwood City to SF King Street (6:00 AM - 10:00 AM)
 - **Afternoon Schedule**: Trains from SF King Street to Redwood City (4:00 PM - 7:00 PM)
 - **Travel Times**: Shows departure, arrival, and journey duration for each train
+- **Color-Coded Speed**: Green (fastest) to red (slowest) based on travel time
+- **Real-Time Filtering**: Hides past trains, highlights trains departing in next 30 minutes with **
 - **Responsive Design**: Works on desktop and mobile devices
 - **Auto-Detection**: Automatically shows relevant schedule based on current time
+- **Auto-Refresh**: Updates every minute to maintain current train information
 
 ## Usage
 
