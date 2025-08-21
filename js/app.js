@@ -41,6 +41,12 @@ class CaltrainApp {
         }
 
         await this.loadSchedules();
+        
+        // Set up automatic refresh every minute to update time-based filtering
+        setInterval(() => {
+            this.renderSchedules();
+            this.updateLastUpdatedTime();
+        }, 60000); // 60 seconds
     }
 
     async loadSchedules() {
@@ -77,7 +83,15 @@ class CaltrainApp {
         const container = this.elements.morningTrains;
         container.innerHTML = '';
 
-        this.morningData.forEach(train => {
+        // Filter out past trains
+        const activeTrains = TimeUtils.filterTrainsByTime(this.morningData);
+
+        if (activeTrains.length === 0) {
+            container.innerHTML = '<div class="no-trains">No more trains departing today</div>';
+            return;
+        }
+
+        activeTrains.forEach(train => {
             const trainCard = this.createTrainCard(train);
             container.appendChild(trainCard);
         });
@@ -89,7 +103,15 @@ class CaltrainApp {
         const container = this.elements.afternoonTrains;
         container.innerHTML = '';
 
-        this.afternoonData.forEach(train => {
+        // Filter out past trains
+        const activeTrains = TimeUtils.filterTrainsByTime(this.afternoonData);
+
+        if (activeTrains.length === 0) {
+            container.innerHTML = '<div class="no-trains">No more trains departing today</div>';
+            return;
+        }
+
+        activeTrains.forEach(train => {
             const trainCard = this.createTrainCard(train);
             container.appendChild(trainCard);
         });
@@ -98,13 +120,19 @@ class CaltrainApp {
     createTrainCard(train) {
         const card = document.createElement('div');
         const speedClass = TimeUtils.getSpeedClass(train.duration);
+        const isSoon = TimeUtils.isTrainSoon(train.departureTime);
+        
         card.className = `train-card ${speedClass}`;
+        if (isSoon) {
+            card.classList.add('departing-soon');
+        }
 
         const typeClass = train.type.toLowerCase().replace(' ', '-');
+        const trainNumberPrefix = isSoon ? '**' : '';
         
         card.innerHTML = `
             <div class="train-header">
-                <div class="train-number">Train ${train.number}</div>
+                <div class="train-number">${trainNumberPrefix}Train ${train.number}</div>
                 <div class="train-type ${typeClass}">${train.type}</div>
             </div>
             <div class="train-times">

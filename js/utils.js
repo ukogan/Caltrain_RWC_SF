@@ -111,4 +111,27 @@ class TimeUtils {
         else if (minutes <= 41) return 'speed-slow';     // Orange - 36-41 min
         else return 'speed-slowest';                      // Red - 42+ min
     }
+
+    static isTrainPast(departureTime) {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const trainDateTime = new Date(`${today}T${departureTime}:00`);
+        
+        return trainDateTime < now;
+    }
+
+    static isTrainSoon(departureTime) {
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        const trainDateTime = new Date(`${today}T${departureTime}:00`);
+        
+        const timeDiff = trainDateTime - now;
+        const minutesDiff = timeDiff / (1000 * 60);
+        
+        return minutesDiff > 0 && minutesDiff <= 30;
+    }
+
+    static filterTrainsByTime(trains) {
+        return trains.filter(train => !this.isTrainPast(train.departureTime));
+    }
 }
