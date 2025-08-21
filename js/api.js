@@ -23,120 +23,108 @@ class CaltrainAPI {
         }
     }
 
-    async getMorningTrains() {
+    async getRwcToSfTrains() {
         try {
             const data = await this.loadScheduleData();
-            return data.morning || [];
+            return data.rwcToSf || [];
         } catch (error) {
-            console.error('Error fetching morning trains:', error);
-            return this.getMockMorningData();
+            console.error('Error fetching RWC to SF trains:', error);
+            return this.getMockRwcToSfData();
         }
     }
 
-    async getAfternoonTrains() {
+    async getSfToRwcTrains() {
         try {
             const data = await this.loadScheduleData();
-            return data.afternoon || [];
+            return data.sfToRwc || [];
         } catch (error) {
-            console.error('Error fetching afternoon trains:', error);
-            return this.getMockAfternoonData();
+            console.error('Error fetching SF to RWC trains:', error);
+            return this.getMockSfToRwcData();
         }
     }
 
 
-    getMockMorningData() {
-        console.warn('Using mock morning data - API unavailable');
+    getMockRwcToSfData() {
+        console.warn('Using mock RWC to SF data - API unavailable');
         return [
-            {
-                number: '152',
-                type: 'Local',
-                departureTime: '06:15',
-                arrivalTime: '07:25',
-                duration: '1h 10m'
-            },
-            {
-                number: '254',
-                type: 'Limited',
-                departureTime: '06:45',
-                arrivalTime: '07:48',
-                duration: '1h 3m'
-            },
-            {
-                number: '156',
-                type: 'Local',
-                departureTime: '07:15',
-                arrivalTime: '08:25',
-                duration: '1h 10m'
-            },
-            {
-                number: '258',
-                type: 'Limited',
-                departureTime: '07:45',
-                arrivalTime: '08:48',
-                duration: '1h 3m'
-            },
-            {
-                number: '160',
-                type: 'Local',
-                departureTime: '08:15',
-                arrivalTime: '09:25',
-                duration: '1h 10m'
-            },
-            {
-                number: '262',
-                type: 'Limited',
-                departureTime: '08:45',
-                arrivalTime: '09:48',
-                duration: '1h 3m'
-            }
+            // Early morning
+            { number: '152', type: 'Local', departureTime: '06:15', arrivalTime: '07:25', duration: '1h 10m' },
+            { number: '254', type: 'Limited', departureTime: '06:45', arrivalTime: '07:48', duration: '1h 3m' },
+            { number: '156', type: 'Local', departureTime: '07:15', arrivalTime: '08:25', duration: '1h 10m' },
+            { number: '258', type: 'Limited', departureTime: '07:45', arrivalTime: '08:48', duration: '1h 3m' },
+            { number: '160', type: 'Local', departureTime: '08:15', arrivalTime: '09:25', duration: '1h 10m' },
+            { number: '262', type: 'Limited', departureTime: '08:45', arrivalTime: '09:48', duration: '1h 3m' },
+            // Mid-morning
+            { number: '164', type: 'Local', departureTime: '09:15', arrivalTime: '10:25', duration: '1h 10m' },
+            { number: '266', type: 'Limited', departureTime: '09:45', arrivalTime: '10:48', duration: '1h 3m' },
+            { number: '168', type: 'Local', departureTime: '10:15', arrivalTime: '11:25', duration: '1h 10m' },
+            { number: '270', type: 'Limited', departureTime: '10:45', arrivalTime: '11:48', duration: '1h 3m' },
+            // Late morning/noon
+            { number: '172', type: 'Local', departureTime: '11:15', arrivalTime: '12:25', duration: '1h 10m' },
+            { number: '274', type: 'Limited', departureTime: '11:45', arrivalTime: '12:48', duration: '1h 3m' },
+            { number: '176', type: 'Local', departureTime: '12:15', arrivalTime: '13:25', duration: '1h 10m' },
+            { number: '278', type: 'Limited', departureTime: '12:45', arrivalTime: '13:48', duration: '1h 3m' },
+            // Afternoon
+            { number: '180', type: 'Local', departureTime: '13:15', arrivalTime: '14:25', duration: '1h 10m' },
+            { number: '282', type: 'Limited', departureTime: '13:45', arrivalTime: '14:48', duration: '1h 3m' },
+            { number: '184', type: 'Local', departureTime: '14:15', arrivalTime: '15:25', duration: '1h 10m' },
+            { number: '286', type: 'Limited', departureTime: '14:45', arrivalTime: '15:48', duration: '1h 3m' },
+            { number: '188', type: 'Local', departureTime: '15:15', arrivalTime: '16:25', duration: '1h 10m' },
+            { number: '290', type: 'Limited', departureTime: '15:45', arrivalTime: '16:48', duration: '1h 3m' },
+            // Evening
+            { number: '192', type: 'Local', departureTime: '16:15', arrivalTime: '17:25', duration: '1h 10m' },
+            { number: '294', type: 'Limited', departureTime: '16:45', arrivalTime: '17:48', duration: '1h 3m' },
+            { number: '196', type: 'Local', departureTime: '17:15', arrivalTime: '18:25', duration: '1h 10m' },
+            { number: '298', type: 'Limited', departureTime: '17:45', arrivalTime: '18:48', duration: '1h 3m' },
+            { number: '200', type: 'Local', departureTime: '18:15', arrivalTime: '19:25', duration: '1h 10m' },
+            { number: '202', type: 'Limited', departureTime: '18:45', arrivalTime: '19:48', duration: '1h 3m' },
+            // Night
+            { number: '204', type: 'Local', departureTime: '19:15', arrivalTime: '20:25', duration: '1h 10m' },
+            { number: '206', type: 'Limited', departureTime: '19:45', arrivalTime: '20:48', duration: '1h 3m' },
+            { number: '208', type: 'Local', departureTime: '20:15', arrivalTime: '21:25', duration: '1h 10m' },
+            { number: '210', type: 'Limited', departureTime: '20:45', arrivalTime: '21:48', duration: '1h 3m' }
         ];
     }
 
-    getMockAfternoonData() {
-        console.warn('Using mock afternoon data - API unavailable');
+    getMockSfToRwcData() {
+        console.warn('Using mock SF to RWC data - API unavailable');
         return [
-            {
-                number: '263',
-                type: 'Limited',
-                departureTime: '16:12',
-                arrivalTime: '17:15',
-                duration: '1h 3m'
-            },
-            {
-                number: '165',
-                type: 'Local',
-                departureTime: '16:35',
-                arrivalTime: '17:45',
-                duration: '1h 10m'
-            },
-            {
-                number: '267',
-                type: 'Limited',
-                departureTime: '17:12',
-                arrivalTime: '18:15',
-                duration: '1h 3m'
-            },
-            {
-                number: '169',
-                type: 'Local',
-                departureTime: '17:35',
-                arrivalTime: '18:45',
-                duration: '1h 10m'
-            },
-            {
-                number: '271',
-                type: 'Limited',
-                departureTime: '18:12',
-                arrivalTime: '19:15',
-                duration: '1h 3m'
-            },
-            {
-                number: '173',
-                type: 'Local',
-                departureTime: '18:35',
-                arrivalTime: '19:45',
-                duration: '1h 10m'
-            }
+            // Early morning
+            { number: '153', type: 'Local', departureTime: '06:12', arrivalTime: '07:22', duration: '1h 10m' },
+            { number: '255', type: 'Limited', departureTime: '06:42', arrivalTime: '07:45', duration: '1h 3m' },
+            { number: '157', type: 'Local', departureTime: '07:12', arrivalTime: '08:22', duration: '1h 10m' },
+            { number: '259', type: 'Limited', departureTime: '07:42', arrivalTime: '08:45', duration: '1h 3m' },
+            { number: '161', type: 'Local', departureTime: '08:12', arrivalTime: '09:22', duration: '1h 10m' },
+            { number: '263', type: 'Limited', departureTime: '08:42', arrivalTime: '09:45', duration: '1h 3m' },
+            // Mid-morning
+            { number: '165', type: 'Local', departureTime: '09:12', arrivalTime: '10:22', duration: '1h 10m' },
+            { number: '267', type: 'Limited', departureTime: '09:42', arrivalTime: '10:45', duration: '1h 3m' },
+            { number: '169', type: 'Local', departureTime: '10:12', arrivalTime: '11:22', duration: '1h 10m' },
+            { number: '271', type: 'Limited', departureTime: '10:42', arrivalTime: '11:45', duration: '1h 3m' },
+            // Late morning/noon
+            { number: '173', type: 'Local', departureTime: '11:12', arrivalTime: '12:22', duration: '1h 10m' },
+            { number: '275', type: 'Limited', departureTime: '11:42', arrivalTime: '12:45', duration: '1h 3m' },
+            { number: '177', type: 'Local', departureTime: '12:12', arrivalTime: '13:22', duration: '1h 10m' },
+            { number: '279', type: 'Limited', departureTime: '12:42', arrivalTime: '13:45', duration: '1h 3m' },
+            // Afternoon
+            { number: '181', type: 'Local', departureTime: '13:12', arrivalTime: '14:22', duration: '1h 10m' },
+            { number: '283', type: 'Limited', departureTime: '13:42', arrivalTime: '14:45', duration: '1h 3m' },
+            { number: '185', type: 'Local', departureTime: '14:12', arrivalTime: '15:22', duration: '1h 10m' },
+            { number: '287', type: 'Limited', departureTime: '14:42', arrivalTime: '15:45', duration: '1h 3m' },
+            { number: '189', type: 'Local', departureTime: '15:12', arrivalTime: '16:22', duration: '1h 10m' },
+            { number: '291', type: 'Limited', departureTime: '15:42', arrivalTime: '16:45', duration: '1h 3m' },
+            // Peak evening
+            { number: '193', type: 'Local', departureTime: '16:12', arrivalTime: '17:22', duration: '1h 10m' },
+            { number: '295', type: 'Limited', departureTime: '16:42', arrivalTime: '17:45', duration: '1h 3m' },
+            { number: '197', type: 'Local', departureTime: '17:12', arrivalTime: '18:22', duration: '1h 10m' },
+            { number: '299', type: 'Limited', departureTime: '17:42', arrivalTime: '18:45', duration: '1h 3m' },
+            { number: '201', type: 'Local', departureTime: '18:12', arrivalTime: '19:22', duration: '1h 10m' },
+            { number: '203', type: 'Limited', departureTime: '18:42', arrivalTime: '19:45', duration: '1h 3m' },
+            // Night
+            { number: '205', type: 'Local', departureTime: '19:12', arrivalTime: '20:22', duration: '1h 10m' },
+            { number: '207', type: 'Limited', departureTime: '19:42', arrivalTime: '20:45', duration: '1h 3m' },
+            { number: '209', type: 'Local', departureTime: '20:12', arrivalTime: '21:22', duration: '1h 10m' },
+            { number: '211', type: 'Limited', departureTime: '20:42', arrivalTime: '21:45', duration: '1h 3m' }
         ];
     }
 }

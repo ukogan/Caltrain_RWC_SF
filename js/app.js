@@ -1,9 +1,10 @@
 class CaltrainApp {
     constructor() {
         this.api = new CaltrainAPI();
-        this.currentView = 'morning';
-        this.morningData = null;
-        this.afternoonData = null;
+        this.currentView = 'rwcToSf';
+        this.currentDay = 'today';
+        this.rwcToSfData = null;
+        this.sfToRwcData = null;
         
         this.initializeElements();
         this.attachEventListeners();
@@ -15,30 +16,30 @@ class CaltrainApp {
             loading: document.getElementById('loading'),
             errorMessage: document.getElementById('errorMessage'),
             retryBtn: document.getElementById('retryBtn'),
-            morningBtn: document.getElementById('morningBtn'),
-            afternoonBtn: document.getElementById('afternoonBtn'),
-            morningSchedule: document.getElementById('morningSchedule'),
-            afternoonSchedule: document.getElementById('afternoonSchedule'),
-            morningTrains: document.getElementById('morningTrains'),
-            afternoonTrains: document.getElementById('afternoonTrains'),
-            lastUpdated: document.getElementById('lastUpdated')
+            rwcToSfBtn: document.getElementById('rwcToSfBtn'),
+            sfToRwcBtn: document.getElementById('sfToRwcBtn'),
+            rwcToSfSchedule: document.getElementById('rwcToSfSchedule'),
+            sfToRwcSchedule: document.getElementById('sfToRwcSchedule'),
+            rwcToSfTrains: document.getElementById('rwcToSfTrains'),
+            sfToRwcTrains: document.getElementById('sfToRwcTrains'),
+            lastUpdated: document.getElementById('lastUpdated'),
+            todayBtn: document.getElementById('todayBtn'),
+            tomorrowBtn: document.getElementById('tomorrowBtn')
         };
     }
 
     attachEventListeners() {
-        this.elements.morningBtn.addEventListener('click', () => this.showMorningSchedule());
-        this.elements.afternoonBtn.addEventListener('click', () => this.showAfternoonSchedule());
+        this.elements.rwcToSfBtn.addEventListener('click', () => this.showRwcToSfSchedule());
+        this.elements.sfToRwcBtn.addEventListener('click', () => this.showSfToRwcSchedule());
         this.elements.retryBtn.addEventListener('click', () => this.loadSchedules());
+        this.elements.todayBtn.addEventListener('click', () => this.showTodaySchedule());
+        this.elements.tomorrowBtn.addEventListener('click', () => this.showTomorrowSchedule());
     }
 
     async initialize() {
-        // Set initial view based on current time
-        const currentPeriod = TimeUtils.getCurrentPeriod();
-        if (currentPeriod === 'afternoon') {
-            this.showAfternoonSchedule();
-        } else {
-            this.showMorningSchedule();
-        }
+        // Start with RWC to SF view and today's schedule
+        this.showRwcToSfSchedule();
+        this.updateRouteInfoText();
 
         await this.loadSchedules();
         
@@ -53,14 +54,14 @@ class CaltrainApp {
         this.showLoading();
         
         try {
-            // Load both schedules in parallel
-            const [morningTrains, afternoonTrains] = await Promise.all([
-                this.api.getMorningTrains(),
-                this.api.getAfternoonTrains()
+            // Load both directions in parallel
+            const [rwcToSfTrains, sfToRwcTrains] = await Promise.all([
+                this.api.getRwcToSfTrains(),
+                this.api.getSfToRwcTrains()
             ]);
 
-            this.morningData = morningTrains;
-            this.afternoonData = afternoonTrains;
+            this.rwcToSfData = rwcToSfTrains;
+            this.sfToRwcData = sfToRwcTrains;
 
             this.renderSchedules();
             this.updateLastUpdatedTime();
@@ -73,21 +74,24 @@ class CaltrainApp {
     }
 
     renderSchedules() {
-        this.renderMorningSchedule();
-        this.renderAfternoonSchedule();
+        this.renderRwcToSfSchedule();
+        this.renderSfToRwcSchedule();
     }
 
-    renderMorningSchedule() {
-        if (!this.morningData) return;
+    renderRwcToSfSchedule() {
+        if (!this.rwcToSfData) return;
 
-        const tableBody = this.elements.morningTrains.querySelector('tbody');
+        const tableBody = this.elements.rwcToSfTrains.querySelector('tbody');
         tableBody.innerHTML = '';
 
-        // Filter out past trains
-        const activeTrains = TimeUtils.filterTrainsByTime(this.morningData);
+        // Filter trains based on current day setting
+        const activeTrains = this.currentDay === 'today' 
+            ? TimeUtils.filterTrainsByTime(this.rwcToSfData)
+            : this.rwcToSfData; // Show all trains for tomorrow
 
         if (activeTrains.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3" class="no-trains">No more trains departing today</td></tr>';
+            const dayText = this.currentDay === 'today' ? 'today' : 'tomorrow';
+            tableBody.innerHTML = `<tr><td colspan="3" class="no-trains">No more trains departing ${dayText}</td></tr>`;
             return;
         }
 
@@ -97,17 +101,20 @@ class CaltrainApp {
         });
     }
 
-    renderAfternoonSchedule() {
-        if (!this.afternoonData) return;
+    renderSfToRwcSchedule() {
+        if (!this.sfToRwcData) return;
 
-        const tableBody = this.elements.afternoonTrains.querySelector('tbody');
+        const tableBody = this.elements.sfToRwcTrains.querySelector('tbody');
         tableBody.innerHTML = '';
 
-        // Filter out past trains
-        const activeTrains = TimeUtils.filterTrainsByTime(this.afternoonData);
+        // Filter trains based on current day setting
+        const activeTrains = this.currentDay === 'today' 
+            ? TimeUtils.filterTrainsByTime(this.sfToRwcData)
+            : this.sfToRwcData; // Show all trains for tomorrow
 
         if (activeTrains.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="3" class="no-trains">No more trains departing today</td></tr>';
+            const dayText = this.currentDay === 'today' ? 'today' : 'tomorrow';
+            tableBody.innerHTML = `<tr><td colspan="3" class="no-trains">No more trains departing ${dayText}</td></tr>`;
             return;
         }
 
@@ -120,7 +127,7 @@ class CaltrainApp {
     createTrainRow(train) {
         const row = document.createElement('tr');
         const speedClass = TimeUtils.getSpeedClass(train.duration);
-        const isSoon = TimeUtils.isTrainSoon(train.departureTime);
+        const isSoon = this.currentDay === 'today' && TimeUtils.isTrainSoon(train.departureTime);
         
         row.className = speedClass;
         if (isSoon) {
@@ -136,20 +143,45 @@ class CaltrainApp {
         return row;
     }
 
-    showMorningSchedule() {
-        this.currentView = 'morning';
-        this.elements.morningBtn.classList.add('active');
-        this.elements.afternoonBtn.classList.remove('active');
-        this.elements.morningSchedule.classList.add('active');
-        this.elements.afternoonSchedule.classList.remove('active');
+    showRwcToSfSchedule() {
+        this.currentView = 'rwcToSf';
+        this.elements.rwcToSfBtn.classList.add('active');
+        this.elements.sfToRwcBtn.classList.remove('active');
+        this.elements.rwcToSfSchedule.classList.add('active');
+        this.elements.sfToRwcSchedule.classList.remove('active');
     }
 
-    showAfternoonSchedule() {
-        this.currentView = 'afternoon';
-        this.elements.afternoonBtn.classList.add('active');
-        this.elements.morningBtn.classList.remove('active');
-        this.elements.afternoonSchedule.classList.add('active');
-        this.elements.morningSchedule.classList.remove('active');
+    showSfToRwcSchedule() {
+        this.currentView = 'sfToRwc';
+        this.elements.sfToRwcBtn.classList.add('active');
+        this.elements.rwcToSfBtn.classList.remove('active');
+        this.elements.sfToRwcSchedule.classList.add('active');
+        this.elements.rwcToSfSchedule.classList.remove('active');
+    }
+
+    showTodaySchedule() {
+        this.currentDay = 'today';
+        this.elements.todayBtn.classList.add('active');
+        this.elements.tomorrowBtn.classList.remove('active');
+        this.updateRouteInfoText();
+        this.renderSchedules();
+    }
+
+    showTomorrowSchedule() {
+        this.currentDay = 'tomorrow';
+        this.elements.tomorrowBtn.classList.add('active');
+        this.elements.todayBtn.classList.remove('active');
+        this.updateRouteInfoText();
+        this.renderSchedules();
+    }
+
+    updateRouteInfoText() {
+        const dayText = this.currentDay === 'today' ? 'remaining today' : 'tomorrow';
+        const rwcToSfInfo = this.elements.rwcToSfSchedule.querySelector('.route-info');
+        const sfToRwcInfo = this.elements.sfToRwcSchedule.querySelector('.route-info');
+        
+        if (rwcToSfInfo) rwcToSfInfo.textContent = `All trains ${dayText}`;
+        if (sfToRwcInfo) sfToRwcInfo.textContent = `All trains ${dayText}`;
     }
 
     showLoading() {

@@ -1,5 +1,5 @@
 {
-  "morning": [
+  "rwcToSf": [
     {
       "number": "401",
       "type": "Local",
@@ -125,9 +125,198 @@
       "departureTime": "11:33",
       "arrivalTime": "12:16",
       "duration": "43m"
+    },
+    {
+      "number": "127",
+      "type": "Local",
+      "departureTime": "12:03",
+      "arrivalTime": "12:46",
+      "duration": "43m"
+    },
+    {
+      "number": "129",
+      "type": "Local",
+      "departureTime": "12:33",
+      "arrivalTime": "13:16",
+      "duration": "43m"
+    },
+    {
+      "number": "131",
+      "type": "Local",
+      "departureTime": "13:03",
+      "arrivalTime": "13:46",
+      "duration": "43m"
+    },
+    {
+      "number": "133",
+      "type": "Local",
+      "departureTime": "13:33",
+      "arrivalTime": "14:16",
+      "duration": "43m"
+    },
+    {
+      "number": "135",
+      "type": "Local",
+      "departureTime": "14:03",
+      "arrivalTime": "14:46",
+      "duration": "43m"
+    },
+    {
+      "number": "419",
+      "type": "Local",
+      "departureTime": "14:18",
+      "arrivalTime": "14:53",
+      "duration": "35m"
+    },
+    {
+      "number": "137",
+      "type": "Local",
+      "departureTime": "14:33",
+      "arrivalTime": "15:16",
+      "duration": "43m"
+    },
+    {
+      "number": "515",
+      "type": "Local",
+      "departureTime": "14:49",
+      "arrivalTime": "15:22",
+      "duration": "33m"
+    },
+    {
+      "number": "139",
+      "type": "Local",
+      "departureTime": "15:03",
+      "arrivalTime": "15:46",
+      "duration": "43m"
+    },
+    {
+      "number": "421",
+      "type": "Local",
+      "departureTime": "15:18",
+      "arrivalTime": "15:53",
+      "duration": "35m"
+    },
+    {
+      "number": "141",
+      "type": "Local",
+      "departureTime": "15:33",
+      "arrivalTime": "16:16",
+      "duration": "43m"
+    },
+    {
+      "number": "519",
+      "type": "Local",
+      "departureTime": "15:49",
+      "arrivalTime": "16:22",
+      "duration": "33m"
+    },
+    {
+      "number": "143",
+      "type": "Local",
+      "departureTime": "16:03",
+      "arrivalTime": "16:46",
+      "duration": "43m"
+    },
+    {
+      "number": "423",
+      "type": "Local",
+      "departureTime": "16:18",
+      "arrivalTime": "16:53",
+      "duration": "35m"
+    },
+    {
+      "number": "145",
+      "type": "Local",
+      "departureTime": "16:33",
+      "arrivalTime": "17:16",
+      "duration": "43m"
+    },
+    {
+      "number": "523",
+      "type": "Local",
+      "departureTime": "16:49",
+      "arrivalTime": "17:22",
+      "duration": "33m"
+    },
+    {
+      "number": "147",
+      "type": "Local",
+      "departureTime": "17:03",
+      "arrivalTime": "17:46",
+      "duration": "43m"
+    },
+    {
+      "number": "425",
+      "type": "Local",
+      "departureTime": "17:18",
+      "arrivalTime": "17:53",
+      "duration": "35m"
+    },
+    {
+      "number": "149",
+      "type": "Local",
+      "departureTime": "17:33",
+      "arrivalTime": "18:16",
+      "duration": "43m"
+    },
+    {
+      "number": "527",
+      "type": "Local",
+      "departureTime": "17:49",
+      "arrivalTime": "18:22",
+      "duration": "33m"
+    },
+    {
+      "number": "151",
+      "type": "Local",
+      "departureTime": "18:03",
+      "arrivalTime": "18:46",
+      "duration": "43m"
+    },
+    {
+      "number": "427",
+      "type": "Local",
+      "departureTime": "18:18",
+      "arrivalTime": "18:53",
+      "duration": "35m"
+    },
+    {
+      "number": "153",
+      "type": "Local",
+      "departureTime": "18:33",
+      "arrivalTime": "19:16",
+      "duration": "43m"
+    },
+    {
+      "number": "529",
+      "type": "Local",
+      "departureTime": "18:49",
+      "arrivalTime": "19:22",
+      "duration": "33m"
+    },
+    {
+      "number": "155",
+      "type": "Local",
+      "departureTime": "19:03",
+      "arrivalTime": "19:46",
+      "duration": "43m"
+    },
+    {
+      "number": "429",
+      "type": "Local",
+      "departureTime": "19:18",
+      "arrivalTime": "19:53",
+      "duration": "35m"
+    },
+    {
+      "number": "157",
+      "type": "Local",
+      "departureTime": "19:33",
+      "arrivalTime": "20:16",
+      "duration": "43m"
     }
   ],
-  "afternoon": [
+  "sfToRwc": [
     {
       "number": "138",
       "type": "Local",

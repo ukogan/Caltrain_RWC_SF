@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caltrain Schedule - Redwood City ↔ SF King Street</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚄</text></svg>">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -18,8 +19,8 @@
 
         <main>
             <div class="schedule-toggle">
-                <button id="morningBtn" class="toggle-btn active">Morning (to SF)</button>
-                <button id="afternoonBtn" class="toggle-btn">Afternoon (to RWC)</button>
+                <button id="rwcToSfBtn" class="toggle-btn active">RWC → SF</button>
+                <button id="sfToRwcBtn" class="toggle-btn">SF → RWC</button>
             </div>
 
             <div class="loading" id="loading">
@@ -33,11 +34,11 @@
             </div>
 
             <div class="schedule-container">
-                <div id="morningSchedule" class="schedule-section active">
-                    <h2>To San Francisco</h2>
-                    <p class="route-info">Redwood City → SF King Street (6:00 AM - 12:00 PM)</p>
+                <div id="rwcToSfSchedule" class="schedule-section active">
+                    <h2>Redwood City → San Francisco</h2>
+                    <p class="route-info">All remaining trains today</p>
                     <div class="schedule-table-container">
-                        <table class="schedule-table" id="morningTrains">
+                        <table class="schedule-table" id="rwcToSfTrains">
                             <thead>
                                 <tr>
                                     <th>Departure</th>
@@ -46,17 +47,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Morning trains will be populated here -->
+                                <!-- RWC to SF trains will be populated here -->
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="afternoonSchedule" class="schedule-section">
-                    <h2>To Redwood City</h2>
-                    <p class="route-info">SF King Street → Redwood City (2:00 PM - 7:00 PM)</p>
+                <div id="sfToRwcSchedule" class="schedule-section">
+                    <h2>San Francisco → Redwood City</h2>
+                    <p class="route-info">All remaining trains today</p>
                     <div class="schedule-table-container">
-                        <table class="schedule-table" id="afternoonTrains">
+                        <table class="schedule-table" id="sfToRwcTrains">
                             <thead>
                                 <tr>
                                     <th>Departure</th>
@@ -65,7 +66,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Afternoon trains will be populated here -->
+                                <!-- SF to RWC trains will be populated here -->
                             </tbody>
                         </table>
                     </div>
@@ -74,6 +75,10 @@
         </main>
 
         <footer>
+            <div class="day-toggle">
+                <button id="todayBtn" class="day-toggle-btn active">Today</button>
+                <button id="tomorrowBtn" class="day-toggle-btn">Tomorrow</button>
+            </div>
             <p>Data provided by <a href="https://www.caltrain.com" target="_blank">Caltrain</a></p>
             <p class="disclaimer">Schedules are subject to change. Check official sources for real-time updates.</p>
         </footer>
