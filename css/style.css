@@ -142,11 +142,104 @@ header p {
     font-size: 1.1rem;
 }
 
-/* Schedule grid */
-.schedule-grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+/* Schedule table */
+.schedule-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 1rem;
+}
+
+.schedule-table thead th {
+    background: #f8f9fa;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #0066cc;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.schedule-table tbody tr {
+    border-bottom: 1px solid #f1f3f4;
+    transition: background-color 0.2s ease;
+}
+
+.schedule-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Speed-based row coloring */
+.schedule-table tbody tr.speed-fastest {
+    border-left: 4px solid #10b981;
+    background: linear-gradient(90deg, #f0fdf4, #ffffff);
+}
+
+.schedule-table tbody tr.speed-fast {
+    border-left: 4px solid #22c55e;
+    background: linear-gradient(90deg, #f7fee7, #ffffff);
+}
+
+.schedule-table tbody tr.speed-medium {
+    border-left: 4px solid #eab308;
+    background: linear-gradient(90deg, #fefce8, #ffffff);
+}
+
+.schedule-table tbody tr.speed-slow {
+    border-left: 4px solid #f97316;
+    background: linear-gradient(90deg, #fff7ed, #ffffff);
+}
+
+.schedule-table tbody tr.speed-slowest {
+    border-left: 4px solid #ef4444;
+    background: linear-gradient(90deg, #fef2f2, #ffffff);
+}
+
+/* Departing soon highlighting for table rows */
+.schedule-table tbody tr.departing-soon {
+    animation: row-pulse-glow 2s infinite;
+    font-weight: 600;
+}
+
+.schedule-table tbody tr.departing-soon .departure-time::before {
+    content: "** ";
+    color: #059669;
+    font-weight: 800;
+}
+
+@keyframes row-pulse-glow {
+    0%, 100% {
+        box-shadow: inset 4px 0 0 #10b981, 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+    50% {
+        box-shadow: inset 4px 0 0 #10b981, 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+}
+
+.schedule-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.schedule-table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+}
+
+.departure-time, .arrival-time {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.duration {
+    font-weight: 500;
+    color: #666;
+    text-align: center;
 }
 
 .train-card {
@@ -207,12 +300,12 @@ header p {
 /* No trains message */
 .no-trains {
     text-align: center;
-    padding: 3rem 2rem;
+    padding: 2rem;
     color: #666;
     font-size: 1.1rem;
     background: #f8f9fa;
-    border-radius: 12px;
     border: 2px dashed #e9ecef;
+    font-style: italic;
 }
 
 .train-card:hover {
@@ -338,27 +431,25 @@ footer a:hover {
         max-width: 300px;
     }
 
-    .schedule-grid {
-        grid-template-columns: 1fr;
+    .schedule-table {
+        font-size: 0.9rem;
     }
 
-    .train-card {
-        padding: 1rem;
+    .schedule-table thead th {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
     }
 
-    .train-times {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
+    .schedule-table td {
+        padding: 0.6rem 0.5rem;
     }
 
-    .departure-time .time, .arrival-time .time {
-        font-size: 1.2rem;
+    .departure-time, .arrival-time {
+        font-size: 1rem;
     }
 
-    .arrow {
-        transform: rotate(90deg);
-        display: block;
-        text-align: center;
+    .duration {
+        font-size: 0.9rem;
     }
 }
 

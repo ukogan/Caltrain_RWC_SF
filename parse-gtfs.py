@@ -115,8 +115,8 @@ def get_route_schedules():
                 dep_minutes = parse_time_to_minutes(rwc_stop['departure_time'])
                 arr_minutes = parse_time_to_minutes(sf_stop['arrival_time'])
                 
-                # Morning trains: 6 AM - 10 AM departures
-                if 360 <= dep_minutes <= 600:  # 6:00 AM to 10:00 AM
+                # Morning trains: 6 AM - 12 PM departures  
+                if 360 <= dep_minutes <= 720:  # 6:00 AM to 12:00 PM
                     duration_mins = arr_minutes - dep_minutes
                     if duration_mins < 0:
                         duration_mins += 24 * 60  # Handle next day
@@ -149,8 +149,8 @@ def get_route_schedules():
                 dep_minutes = parse_time_to_minutes(sf_stop['departure_time'])
                 arr_minutes = parse_time_to_minutes(rwc_stop['arrival_time'])
                 
-                # Afternoon trains: 4 PM - 7 PM departures  
-                if 960 <= dep_minutes <= 1140:  # 4:00 PM to 7:00 PM
+                # Afternoon trains: 2 PM - 7 PM departures  
+                if 840 <= dep_minutes <= 1140:  # 2:00 PM to 7:00 PM
                     duration_mins = arr_minutes - dep_minutes
                     if duration_mins < 0:
                         duration_mins += 24 * 60  # Handle next day

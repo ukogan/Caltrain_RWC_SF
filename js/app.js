@@ -80,78 +80,60 @@ class CaltrainApp {
     renderMorningSchedule() {
         if (!this.morningData) return;
 
-        const container = this.elements.morningTrains;
-        container.innerHTML = '';
+        const tableBody = this.elements.morningTrains.querySelector('tbody');
+        tableBody.innerHTML = '';
 
         // Filter out past trains
         const activeTrains = TimeUtils.filterTrainsByTime(this.morningData);
 
         if (activeTrains.length === 0) {
-            container.innerHTML = '<div class="no-trains">No more trains departing today</div>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="no-trains">No more trains departing today</td></tr>';
             return;
         }
 
         activeTrains.forEach(train => {
-            const trainCard = this.createTrainCard(train);
-            container.appendChild(trainCard);
+            const trainRow = this.createTrainRow(train);
+            tableBody.appendChild(trainRow);
         });
     }
 
     renderAfternoonSchedule() {
         if (!this.afternoonData) return;
 
-        const container = this.elements.afternoonTrains;
-        container.innerHTML = '';
+        const tableBody = this.elements.afternoonTrains.querySelector('tbody');
+        tableBody.innerHTML = '';
 
         // Filter out past trains
         const activeTrains = TimeUtils.filterTrainsByTime(this.afternoonData);
 
         if (activeTrains.length === 0) {
-            container.innerHTML = '<div class="no-trains">No more trains departing today</div>';
+            tableBody.innerHTML = '<tr><td colspan="3" class="no-trains">No more trains departing today</td></tr>';
             return;
         }
 
         activeTrains.forEach(train => {
-            const trainCard = this.createTrainCard(train);
-            container.appendChild(trainCard);
+            const trainRow = this.createTrainRow(train);
+            tableBody.appendChild(trainRow);
         });
     }
 
-    createTrainCard(train) {
-        const card = document.createElement('div');
+    createTrainRow(train) {
+        const row = document.createElement('tr');
         const speedClass = TimeUtils.getSpeedClass(train.duration);
         const isSoon = TimeUtils.isTrainSoon(train.departureTime);
         
-        card.className = `train-card ${speedClass}`;
+        row.className = speedClass;
         if (isSoon) {
-            card.classList.add('departing-soon');
+            row.classList.add('departing-soon');
         }
-
-        const typeClass = train.type.toLowerCase().replace(' ', '-');
-        const trainNumberPrefix = isSoon ? '**' : '';
         
-        card.innerHTML = `
-            <div class="train-header">
-                <div class="train-number">${trainNumberPrefix}Train ${train.number}</div>
-                <div class="train-type ${typeClass}">${train.type}</div>
-            </div>
-            <div class="train-times">
-                <div class="departure-time">
-                    <h3>Departure</h3>
-                    <div class="time">${TimeUtils.formatTime(train.departureTime)}</div>
-                </div>
-                <div class="travel-duration">
-                    <div class="arrow">→</div>
-                    <div class="duration">${train.duration}</div>
-                </div>
-                <div class="arrival-time">
-                    <h3>Arrival</h3>
-                    <div class="time">${TimeUtils.formatTime(train.arrivalTime)}</div>
-                </div>
-            </div>
+        row.innerHTML = `
+            <td class="departure-time">${TimeUtils.formatTime(train.departureTime)}</td>
+            <td class="duration">${train.duration}</td>
+            <td class="arrival-time">${TimeUtils.formatTime(train.arrivalTime)}</td>
         `;
 
-        return card;
+        return row;
     }
 
     showMorningSchedule() {
