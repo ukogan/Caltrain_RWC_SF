@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caltrain Schedule - Redwood City ↔ SF King Street</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚂 Caltrain Schedule</h1>
+            <p>Redwood City ↔ SF King Street</p>
+            <div class="last-updated">
+                Last updated: <span id="lastUpdated">Loading...</span>
+            </div>
+        </header>
+
+        <main>
+            <div class="schedule-toggle">
+                <button id="morningBtn" class="toggle-btn active">Morning (to SF)</button>
+                <button id="afternoonBtn" class="toggle-btn">Afternoon (to RWC)</button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Loading train schedules...</p>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;">
+                <p>Unable to load schedule data. Please try again later.</p>
+                <button id="retryBtn" class="retry-btn">Retry</button>
+            </div>
+
+            <div class="schedule-container">
+                <div id="morningSchedule" class="schedule-section active">
+                    <h2>Morning Trains to San Francisco</h2>
+                    <p class="route-info">Redwood City → SF King Street (6:00 AM - 10:00 AM)</p>
+                    <div class="schedule-grid" id="morningTrains">
+                        <!-- Morning trains will be populated here -->
+                    </div>
+                </div>
+
+                <div id="afternoonSchedule" class="schedule-section">
+                    <h2>Afternoon Trains to Redwood City</h2>
+                    <p class="route-info">SF King Street → Redwood City (4:00 PM - 7:00 PM)</p>
+                    <div class="schedule-grid" id="afternoonTrains">
+                        <!-- Afternoon trains will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Data provided by <a href="https://www.caltrain.com" target="_blank">Caltrain</a></p>
+            <p class="disclaimer">Schedules are subject to change. Check official sources for real-time updates.</p>
+        </footer>
+    </div>
+
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

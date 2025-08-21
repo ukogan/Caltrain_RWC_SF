@@ -1,0 +1,189 @@
+{
+  "morning": [
+    {
+      "number": "401",
+      "type": "Local",
+      "departureTime": "06:18",
+      "arrivalTime": "06:53",
+      "duration": "35m"
+    },
+    {
+      "number": "105",
+      "type": "Local",
+      "departureTime": "06:33",
+      "arrivalTime": "07:16",
+      "duration": "43m"
+    },
+    {
+      "number": "503",
+      "type": "Local",
+      "departureTime": "06:49",
+      "arrivalTime": "07:22",
+      "duration": "33m"
+    },
+    {
+      "number": "107",
+      "type": "Local",
+      "departureTime": "07:03",
+      "arrivalTime": "07:46",
+      "duration": "43m"
+    },
+    {
+      "number": "405",
+      "type": "Local",
+      "departureTime": "07:18",
+      "arrivalTime": "07:53",
+      "duration": "35m"
+    },
+    {
+      "number": "109",
+      "type": "Local",
+      "departureTime": "07:33",
+      "arrivalTime": "08:16",
+      "duration": "43m"
+    },
+    {
+      "number": "507",
+      "type": "Local",
+      "departureTime": "07:49",
+      "arrivalTime": "08:22",
+      "duration": "33m"
+    },
+    {
+      "number": "111",
+      "type": "Local",
+      "departureTime": "08:03",
+      "arrivalTime": "08:46",
+      "duration": "43m"
+    },
+    {
+      "number": "409",
+      "type": "Local",
+      "departureTime": "08:18",
+      "arrivalTime": "08:53",
+      "duration": "35m"
+    },
+    {
+      "number": "113",
+      "type": "Local",
+      "departureTime": "08:34",
+      "arrivalTime": "09:16",
+      "duration": "42m"
+    },
+    {
+      "number": "511",
+      "type": "Local",
+      "departureTime": "08:49",
+      "arrivalTime": "09:22",
+      "duration": "33m"
+    },
+    {
+      "number": "115",
+      "type": "Local",
+      "departureTime": "09:03",
+      "arrivalTime": "09:46",
+      "duration": "43m"
+    },
+    {
+      "number": "413",
+      "type": "Local",
+      "departureTime": "09:18",
+      "arrivalTime": "09:53",
+      "duration": "35m"
+    },
+    {
+      "number": "117",
+      "type": "Local",
+      "departureTime": "09:33",
+      "arrivalTime": "10:16",
+      "duration": "43m"
+    }
+  ],
+  "afternoon": [
+    {
+      "number": "518",
+      "type": "Local",
+      "departureTime": "16:20",
+      "arrivalTime": "16:53",
+      "duration": "33m"
+    },
+    {
+      "number": "146",
+      "type": "Local",
+      "departureTime": "16:25",
+      "arrivalTime": "17:07",
+      "duration": "42m"
+    },
+    {
+      "number": "420",
+      "type": "Local",
+      "departureTime": "16:48",
+      "arrivalTime": "17:22",
+      "duration": "34m"
+    },
+    {
+      "number": "148",
+      "type": "Local",
+      "departureTime": "16:55",
+      "arrivalTime": "17:37",
+      "duration": "42m"
+    },
+    {
+      "number": "522",
+      "type": "Local",
+      "departureTime": "17:20",
+      "arrivalTime": "17:53",
+      "duration": "33m"
+    },
+    {
+      "number": "150",
+      "type": "Local",
+      "departureTime": "17:25",
+      "arrivalTime": "18:07",
+      "duration": "42m"
+    },
+    {
+      "number": "424",
+      "type": "Local",
+      "departureTime": "17:48",
+      "arrivalTime": "18:22",
+      "duration": "34m"
+    },
+    {
+      "number": "152",
+      "type": "Local",
+      "departureTime": "17:55",
+      "arrivalTime": "18:37",
+      "duration": "42m"
+    },
+    {
+      "number": "526",
+      "type": "Local",
+      "departureTime": "18:20",
+      "arrivalTime": "18:53",
+      "duration": "33m"
+    },
+    {
+      "number": "154",
+      "type": "Local",
+      "departureTime": "18:25",
+      "arrivalTime": "19:07",
+      "duration": "42m"
+    },
+    {
+      "number": "428",
+      "type": "Local",
+      "departureTime": "18:48",
+      "arrivalTime": "19:22",
+      "duration": "34m"
+    },
+    {
+      "number": "156",
+      "type": "Local",
+      "departureTime": "18:55",
+      "arrivalTime": "19:37",
+      "duration": "42m"
+    }
+  ],
+  "lastUpdated": "2025-08-21T08:27:21.263818"
+}
