@@ -215,6 +215,14 @@ class CaltrainAPI {
 
             console.log(`Converted GTFS-RT data: ${rwcToSf.length} RWC→SF trains, ${sfToRwc.length} SF→RWC trains`);
             
+            // Debug: Show some sample train times
+            if (rwcToSf.length > 0) {
+                console.log('Sample RWC→SF trains:', rwcToSf.slice(0, 3).map(t => `${t.number} at ${t.departureTime}`));
+            }
+            if (sfToRwc.length > 0) {
+                console.log('Sample SF→RWC trains:', sfToRwc.slice(0, 3).map(t => `${t.number} at ${t.departureTime}`));
+            }
+            
             return { rwcToSf, sfToRwc };
             
         } catch (error) {
@@ -254,18 +262,25 @@ class CaltrainAPI {
         }
     }
 
-    async getRwcToSfTrains() {
+    async getRwcToSfTrains(forTomorrow = false) {
         try {
-            // First try live data
+            // For tomorrow, skip live data and use static schedule
+            if (forTomorrow) {
+                console.log('Using static schedule data for RWC to SF (tomorrow)');
+                const data = await this.loadScheduleData();
+                return data.rwcToSf || [];
+            }
+            
+            // For today, try live data first
             const liveData = await this.fetchLiveData();
-            if (liveData && liveData.rwcToSf) {
-                console.log('Using live GTFS-RT data for RWC to SF');
+            if (liveData && liveData.rwcToSf && liveData.rwcToSf.length > 0) {
+                console.log('Using live GTFS-RT data for RWC to SF (today)');
                 return liveData.rwcToSf;
             }
             
             // Fall back to static data
             const data = await this.loadScheduleData();
-            console.log('Using static schedule data for RWC to SF');
+            console.log('Using static schedule data for RWC to SF (live data unavailable)');
             return data.rwcToSf || [];
         } catch (error) {
             console.error('Error fetching RWC to SF trains:', error);
@@ -274,18 +289,25 @@ class CaltrainAPI {
         }
     }
 
-    async getSfToRwcTrains() {
+    async getSfToRwcTrains(forTomorrow = false) {
         try {
-            // First try live data
+            // For tomorrow, skip live data and use static schedule
+            if (forTomorrow) {
+                console.log('Using static schedule data for SF to RWC (tomorrow)');
+                const data = await this.loadScheduleData();
+                return data.sfToRwc || [];
+            }
+            
+            // For today, try live data first
             const liveData = await this.fetchLiveData();
-            if (liveData && liveData.sfToRwc) {
-                console.log('Using live GTFS-RT data for SF to RWC');
+            if (liveData && liveData.sfToRwc && liveData.sfToRwc.length > 0) {
+                console.log('Using live GTFS-RT data for SF to RWC (today)');
                 return liveData.sfToRwc;
             }
             
             // Fall back to static data
             const data = await this.loadScheduleData();
-            console.log('Using static schedule data for SF to RWC');
+            console.log('Using static schedule data for SF to RWC (live data unavailable)');
             return data.sfToRwc || [];
         } catch (error) {
             console.error('Error fetching SF to RWC trains:', error);

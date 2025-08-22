@@ -54,10 +54,13 @@ class CaltrainApp {
         this.showLoading();
         
         try {
+            // Determine if we're loading for tomorrow
+            const forTomorrow = this.currentDay === 'tomorrow';
+            
             // Load both directions in parallel
             const [rwcToSfTrains, sfToRwcTrains] = await Promise.all([
-                this.api.getRwcToSfTrains(),
-                this.api.getSfToRwcTrains()
+                this.api.getRwcToSfTrains(forTomorrow),
+                this.api.getSfToRwcTrains(forTomorrow)
             ]);
 
             this.rwcToSfData = rwcToSfTrains;
