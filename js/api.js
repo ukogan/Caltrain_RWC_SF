@@ -3,6 +3,8 @@ class CaltrainAPI {
         this.scheduleData = null;
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+        this.apiKey = '1710b328-a1aa-483f-8eed-9c59d865acce';
+        this.baseUrl = 'https://api.511.org/transit';
     }
 
     async loadScheduleData() {
@@ -23,22 +25,76 @@ class CaltrainAPI {
         }
     }
 
+    async fetchLiveData() {
+        try {
+            console.log('Attempting to fetch live GTFS-RT data...');
+            
+            // Try to fetch trip updates from 511.org
+            const url = `${this.baseUrl}/tripupdates?api_key=${this.apiKey}&agency=CT`;
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/x-protobuf'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`GTFS-RT API error: ${response.status} ${response.statusText}`);
+            }
+
+            console.log('GTFS-RT response received, size:', response.headers.get('content-length'));
+            
+            // For now, just log that we got data and return null
+            // TODO: Parse protobuf data
+            const buffer = await response.arrayBuffer();
+            console.log('GTFS-RT data received, bytes:', buffer.byteLength);
+            
+            // Return null for now - will implement parsing next
+            return null;
+            
+        } catch (error) {
+            console.error('Live data fetch failed:', error);
+            return null;
+        }
+    }
+
     async getRwcToSfTrains() {
         try {
+            // First try live data
+            const liveData = await this.fetchLiveData();
+            if (liveData && liveData.rwcToSf) {
+                console.log('Using live GTFS-RT data for RWC to SF');
+                return liveData.rwcToSf;
+            }
+            
+            // Fall back to static data
             const data = await this.loadScheduleData();
+            console.log('Using static schedule data for RWC to SF');
             return data.rwcToSf || [];
         } catch (error) {
             console.error('Error fetching RWC to SF trains:', error);
+            console.log('Using mock data for RWC to SF');
             return this.getMockRwcToSfData();
         }
     }
 
     async getSfToRwcTrains() {
         try {
+            // First try live data
+            const liveData = await this.fetchLiveData();
+            if (liveData && liveData.sfToRwc) {
+                console.log('Using live GTFS-RT data for SF to RWC');
+                return liveData.sfToRwc;
+            }
+            
+            // Fall back to static data
             const data = await this.loadScheduleData();
+            console.log('Using static schedule data for SF to RWC');
             return data.sfToRwc || [];
         } catch (error) {
             console.error('Error fetching SF to RWC trains:', error);
+            console.log('Using mock data for SF to RWC');
             return this.getMockSfToRwcData();
         }
     }
