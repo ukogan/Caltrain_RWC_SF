@@ -1,10 +1,13 @@
 class CaltrainAPI {
     constructor() {
         this.scheduleData = null;
+        this.staticGTFSData = null;
         this.cache = new Map();
         this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+        this.staticCacheTimeout = 24 * 60 * 60 * 1000; // 24 hours for static data
         this.apiKey = '1710b328-a1aa-483f-8eed-9c59d865acce';
         this.baseUrl = 'https://api.511.org/transit';
+        this.lastStaticFetch = null;
     }
 
     async loadScheduleData() {
@@ -262,28 +265,249 @@ class CaltrainAPI {
         }
     }
 
+    async fetchStaticGTFS() {
+        try {
+            // Check if we have cached static data that's less than 24 hours old
+            const now = Date.now();
+            if (this.staticGTFSData && this.lastStaticFetch && 
+                (now - this.lastStaticFetch) < this.staticCacheTimeout) {
+                console.log('Using cached static GTFS data');
+                return this.staticGTFSData;
+            }
+
+            console.log('Fetching fresh static GTFS data from 511.org...');
+            
+            const url = `${this.baseUrl}/datafeeds?api_key=${this.apiKey}&operator_id=CT`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Static GTFS fetch failed: ${response.status}`);
+            }
+
+            const zipBuffer = await response.arrayBuffer();
+            console.log('Static GTFS ZIP downloaded, size:', zipBuffer.byteLength);
+
+            // Parse the ZIP file
+            const zip = await JSZip.loadAsync(zipBuffer);
+            
+            // Extract the files we need
+            const stopTimesFile = zip.file('stop_times.txt');
+            const stopsFile = zip.file('stops.txt');
+            const routesFile = zip.file('routes.txt');
+            const tripsFile = zip.file('trips.txt');
+            
+            if (!stopTimesFile || !stopsFile || !routesFile || !tripsFile) {
+                throw new Error('Required GTFS files not found in ZIP');
+            }
+
+            console.log('Parsing GTFS CSV files...');
+            
+            // Parse CSV files
+            const [stopTimes, stops, routes, trips] = await Promise.all([
+                this.parseCSV(await stopTimesFile.async('text')),
+                this.parseCSV(await stopsFile.async('text')),
+                this.parseCSV(await routesFile.async('text')),
+                this.parseCSV(await tripsFile.async('text'))
+            ]);
+
+            // Process the data to create our schedule format
+            const processedData = this.processGTFSData(stopTimes, stops, routes, trips);
+            
+            this.staticGTFSData = processedData;
+            this.lastStaticFetch = now;
+            
+            console.log('Static GTFS data processed successfully');
+            return processedData;
+            
+        } catch (error) {
+            console.error('Failed to fetch static GTFS data:', error);
+            return null;
+        }
+    }
+
+    parseCSV(csvText) {
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        
+        return lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.replace(/"/g, '').trim());
+            const obj = {};
+            headers.forEach((header, index) => {
+                obj[header] = values[index] || '';
+            });
+            return obj;
+        });
+    }
+
+    processGTFSData(stopTimes, stops, routes, trips) {
+        try {
+            console.log('Processing GTFS data...');
+            
+            // Find Redwood City and SF King Street stop IDs
+            const rwcStop = stops.find(stop => 
+                stop.stop_name && stop.stop_name.toLowerCase().includes('redwood city')
+            );
+            const sfStop = stops.find(stop => 
+                stop.stop_name && (
+                    stop.stop_name.toLowerCase().includes('san francisco') ||
+                    stop.stop_name.toLowerCase().includes('king')
+                )
+            );
+            
+            if (!rwcStop || !sfStop) {
+                console.error('Could not find RWC or SF stops in GTFS data');
+                return { rwcToSf: [], sfToRwc: [] };
+            }
+            
+            console.log('Found stops:', rwcStop.stop_name, 'and', sfStop.stop_name);
+            
+            // Find Caltrain routes (should be route type 2 for rail)
+            const caltrainRoutes = routes.filter(route => 
+                route.route_type === '2' || route.agency_id === 'caltrain-ca-us'
+            );
+            
+            if (caltrainRoutes.length === 0) {
+                console.error('No Caltrain routes found');
+                return { rwcToSf: [], sfToRwc: [] };
+            }
+            
+            console.log('Found', caltrainRoutes.length, 'Caltrain routes');
+            
+            // Get trips for these routes
+            const caltrainTrips = trips.filter(trip => 
+                caltrainRoutes.some(route => route.route_id === trip.route_id)
+            );
+            
+            console.log('Found', caltrainTrips.length, 'Caltrain trips');
+            
+            // Process stop times to find trains between RWC and SF
+            const rwcToSf = [];
+            const sfToRwc = [];
+            
+            // Group stop times by trip
+            const tripStopTimes = {};
+            stopTimes.forEach(stopTime => {
+                if (!tripStopTimes[stopTime.trip_id]) {
+                    tripStopTimes[stopTime.trip_id] = [];
+                }
+                tripStopTimes[stopTime.trip_id].push(stopTime);
+            });
+            
+            // Process each trip
+            caltrainTrips.forEach(trip => {
+                const tripStops = tripStopTimes[trip.trip_id];
+                if (!tripStops) return;
+                
+                // Find our stations in this trip
+                const rwcStopTime = tripStops.find(st => st.stop_id === rwcStop.stop_id);
+                const sfStopTime = tripStops.find(st => st.stop_id === sfStop.stop_id);
+                
+                if (rwcStopTime && sfStopTime) {
+                    // Determine direction based on stop sequence
+                    const rwcSequence = parseInt(rwcStopTime.stop_sequence);
+                    const sfSequence = parseInt(sfStopTime.stop_sequence);
+                    
+                    if (rwcSequence < sfSequence) {
+                        // RWC to SF
+                        rwcToSf.push({
+                            number: trip.trip_short_name || trip.trip_id.substring(0, 6),
+                            type: 'Local', // Could enhance this
+                            departureTime: this.formatGTFSTime(rwcStopTime.departure_time),
+                            arrivalTime: this.formatGTFSTime(sfStopTime.arrival_time),
+                            duration: this.calculateGTFSDuration(rwcStopTime.departure_time, sfStopTime.arrival_time),
+                            tripId: trip.trip_id
+                        });
+                    } else {
+                        // SF to RWC
+                        sfToRwc.push({
+                            number: trip.trip_short_name || trip.trip_id.substring(0, 6),
+                            type: 'Local',
+                            departureTime: this.formatGTFSTime(sfStopTime.departure_time),
+                            arrivalTime: this.formatGTFSTime(rwcStopTime.arrival_time),
+                            duration: this.calculateGTFSDuration(sfStopTime.departure_time, rwcStopTime.arrival_time),
+                            tripId: trip.trip_id
+                        });
+                    }
+                }
+            });
+            
+            // Sort by departure time
+            rwcToSf.sort((a, b) => a.departureTime.localeCompare(b.departureTime));
+            sfToRwc.sort((a, b) => a.departureTime.localeCompare(b.departureTime));
+            
+            console.log(`Processed static GTFS: ${rwcToSf.length} RWC→SF, ${sfToRwc.length} SF→RWC trains`);
+            
+            return { rwcToSf, sfToRwc };
+            
+        } catch (error) {
+            console.error('Error processing GTFS data:', error);
+            return { rwcToSf: [], sfToRwc: [] };
+        }
+    }
+
+    formatGTFSTime(timeString) {
+        // GTFS time format is HH:MM:SS, we want HH:MM
+        if (!timeString) return '';
+        const parts = timeString.split(':');
+        if (parts.length >= 2) {
+            return `${parts[0]}:${parts[1]}`;
+        }
+        return timeString;
+    }
+
+    calculateGTFSDuration(startTime, endTime) {
+        try {
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+            
+            let startMinutes = startHour * 60 + startMin;
+            let endMinutes = endHour * 60 + endMin;
+            
+            // Handle next day arrivals (GTFS can have times like 25:30)
+            if (endMinutes < startMinutes) {
+                endMinutes += 24 * 60;
+            }
+            
+            const durationMinutes = endMinutes - startMinutes;
+            const hours = Math.floor(durationMinutes / 60);
+            const minutes = durationMinutes % 60;
+            
+            if (hours === 0) {
+                return `${minutes}m`;
+            } else if (minutes === 0) {
+                return `${hours}h`;
+            } else {
+                return `${hours}h ${minutes}m`;
+            }
+        } catch (error) {
+            return 'N/A';
+        }
+    }
+
     async getRwcToSfTrains(forTomorrow = false) {
         try {
-            // For tomorrow, skip live data and use static schedule
+            // Always get static schedule as base
+            const staticData = await this.fetchStaticGTFS();
+            
+            if (!staticData || !staticData.rwcToSf) {
+                console.log('Static GTFS failed, falling back to local JSON for RWC to SF');
+                const fallbackData = await this.loadScheduleData();
+                return fallbackData.rwcToSf || this.getMockRwcToSfData();
+            }
+
+            // For tomorrow, just return static data
             if (forTomorrow) {
-                console.log('Using static schedule data for RWC to SF (tomorrow)');
-                const data = await this.loadScheduleData();
-                return data.rwcToSf || [];
+                console.log('Using static GTFS data for RWC to SF (tomorrow)');
+                return staticData.rwcToSf;
             }
             
-            // For today, try live data first
-            const liveData = await this.fetchLiveData();
-            if (liveData && liveData.rwcToSf && liveData.rwcToSf.length > 0) {
-                console.log('Using live GTFS-RT data for RWC to SF (today)');
-                return liveData.rwcToSf;
-            }
+            // For today, merge with real-time updates
+            console.log('Merging static GTFS with real-time updates for RWC to SF (today)');
+            const mergedData = await this.mergeWithRealtime(staticData.rwcToSf, 'rwcToSf');
+            return mergedData;
             
-            // Fall back to static data
-            const data = await this.loadScheduleData();
-            console.log('Using static schedule data for RWC to SF (live data unavailable)');
-            return data.rwcToSf || [];
         } catch (error) {
-            console.error('Error fetching RWC to SF trains:', error);
+            console.error('Error in hybrid data fetch for RWC to SF:', error);
             console.log('Using mock data for RWC to SF');
             return this.getMockRwcToSfData();
         }
@@ -291,28 +515,88 @@ class CaltrainAPI {
 
     async getSfToRwcTrains(forTomorrow = false) {
         try {
-            // For tomorrow, skip live data and use static schedule
+            // Always get static schedule as base
+            const staticData = await this.fetchStaticGTFS();
+            
+            if (!staticData || !staticData.sfToRwc) {
+                console.log('Static GTFS failed, falling back to local JSON for SF to RWC');
+                const fallbackData = await this.loadScheduleData();
+                return fallbackData.sfToRwc || this.getMockSfToRwcData();
+            }
+
+            // For tomorrow, just return static data
             if (forTomorrow) {
-                console.log('Using static schedule data for SF to RWC (tomorrow)');
-                const data = await this.loadScheduleData();
-                return data.sfToRwc || [];
+                console.log('Using static GTFS data for SF to RWC (tomorrow)');
+                return staticData.sfToRwc;
             }
             
-            // For today, try live data first
-            const liveData = await this.fetchLiveData();
-            if (liveData && liveData.sfToRwc && liveData.sfToRwc.length > 0) {
-                console.log('Using live GTFS-RT data for SF to RWC (today)');
-                return liveData.sfToRwc;
-            }
+            // For today, merge with real-time updates
+            console.log('Merging static GTFS with real-time updates for SF to RWC (today)');
+            const mergedData = await this.mergeWithRealtime(staticData.sfToRwc, 'sfToRwc');
+            return mergedData;
             
-            // Fall back to static data
-            const data = await this.loadScheduleData();
-            console.log('Using static schedule data for SF to RWC (live data unavailable)');
-            return data.sfToRwc || [];
         } catch (error) {
-            console.error('Error fetching SF to RWC trains:', error);
+            console.error('Error in hybrid data fetch for SF to RWC:', error);
             console.log('Using mock data for SF to RWC');
             return this.getMockSfToRwcData();
+        }
+    }
+
+    async mergeWithRealtime(staticTrains, direction) {
+        try {
+            // Get real-time updates
+            const realtimeData = await this.fetchLiveData();
+            
+            if (!realtimeData || (!realtimeData.rwcToSf && !realtimeData.sfToRwc)) {
+                console.log('No real-time data available, using static schedule only');
+                return staticTrains;
+            }
+            
+            const realtimeTrains = direction === 'rwcToSf' ? realtimeData.rwcToSf : realtimeData.sfToRwc;
+            
+            if (!realtimeTrains || realtimeTrains.length === 0) {
+                console.log(`No real-time data for ${direction}, using static schedule only`);
+                return staticTrains;
+            }
+            
+            console.log(`Applying real-time updates to ${staticTrains.length} static trains`);
+            
+            // Create a map of real-time updates by trip ID
+            const realtimeMap = new Map();
+            realtimeTrains.forEach(rt => {
+                if (rt.tripId) {
+                    realtimeMap.set(rt.tripId, rt);
+                }
+            });
+            
+            // Apply real-time updates to static trains
+            const mergedTrains = staticTrains.map(staticTrain => {
+                const realtimeUpdate = realtimeMap.get(staticTrain.tripId);
+                
+                if (realtimeUpdate) {
+                    // Use real-time times if available
+                    return {
+                        ...staticTrain,
+                        departureTime: realtimeUpdate.departureTime || staticTrain.departureTime,
+                        arrivalTime: realtimeUpdate.arrivalTime || staticTrain.arrivalTime,
+                        duration: realtimeUpdate.duration || staticTrain.duration,
+                        isRealtime: true
+                    };
+                }
+                
+                // No real-time update, use static
+                return {
+                    ...staticTrain,
+                    isRealtime: false
+                };
+            });
+            
+            console.log(`Merged data: ${mergedTrains.filter(t => t.isRealtime).length} trains with real-time updates`);
+            return mergedTrains;
+            
+        } catch (error) {
+            console.error('Error merging real-time data:', error);
+            return staticTrains;
         }
     }
 
