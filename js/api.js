@@ -45,17 +45,212 @@ class CaltrainAPI {
 
             console.log('GTFS-RT response received, size:', response.headers.get('content-length'));
             
-            // For now, just log that we got data and return null
-            // TODO: Parse protobuf data
             const buffer = await response.arrayBuffer();
             console.log('GTFS-RT data received, bytes:', buffer.byteLength);
             
-            // Return null for now - will implement parsing next
+            // Parse the protobuf data
+            const parsedData = await this.parseGTFSRealtime(buffer);
+            if (parsedData) {
+                console.log('Successfully parsed GTFS-RT data');
+                return parsedData;
+            }
+            
             return null;
             
         } catch (error) {
             console.error('Live data fetch failed:', error);
             return null;
+        }
+    }
+
+    async parseGTFSRealtime(buffer) {
+        try {
+            // Simple GTFS-RT schema definition for protobuf.js
+            const GTFSRealtimeSchema = {
+                "nested": {
+                    "transit_realtime": {
+                        "nested": {
+                            "FeedMessage": {
+                                "fields": {
+                                    "header": {"rule": "required", "type": "FeedHeader", "id": 1},
+                                    "entity": {"rule": "repeated", "type": "FeedEntity", "id": 2}
+                                }
+                            },
+                            "FeedHeader": {
+                                "fields": {
+                                    "gtfsRealtimeVersion": {"rule": "required", "type": "string", "id": 1},
+                                    "timestamp": {"type": "uint64", "id": 3}
+                                }
+                            },
+                            "FeedEntity": {
+                                "fields": {
+                                    "id": {"rule": "required", "type": "string", "id": 1},
+                                    "tripUpdate": {"type": "TripUpdate", "id": 3}
+                                }
+                            },
+                            "TripUpdate": {
+                                "fields": {
+                                    "trip": {"rule": "required", "type": "TripDescriptor", "id": 1},
+                                    "stopTimeUpdate": {"rule": "repeated", "type": "StopTimeUpdate", "id": 2}
+                                }
+                            },
+                            "TripDescriptor": {
+                                "fields": {
+                                    "tripId": {"type": "string", "id": 1},
+                                    "routeId": {"type": "string", "id": 5},
+                                    "directionId": {"type": "uint32", "id": 6},
+                                    "startTime": {"type": "string", "id": 2}
+                                }
+                            },
+                            "StopTimeUpdate": {
+                                "fields": {
+                                    "stopSequence": {"type": "uint32", "id": 1},
+                                    "stopId": {"type": "string", "id": 4},
+                                    "arrival": {"type": "StopTimeEvent", "id": 2},
+                                    "departure": {"type": "StopTimeEvent", "id": 3}
+                                }
+                            },
+                            "StopTimeEvent": {
+                                "fields": {
+                                    "time": {"type": "int64", "id": 1},
+                                    "delay": {"type": "int32", "id": 2}
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Load the schema and decode
+            const root = protobuf.Root.fromJSON(GTFSRealtimeSchema);
+            const FeedMessage = root.lookupType("transit_realtime.FeedMessage");
+            
+            const message = FeedMessage.decode(new Uint8Array(buffer));
+            const object = FeedMessage.toObject(message, {
+                longs: String,
+                enums: String,
+                bytes: String,
+            });
+
+            console.log('Parsed GTFS-RT feed with', object.entity?.length || 0, 'entities');
+            
+            // Convert to our format
+            return this.convertGTFSToOurFormat(object);
+            
+        } catch (error) {
+            console.error('Failed to parse GTFS-RT data:', error);
+            return null;
+        }
+    }
+
+    convertGTFSToOurFormat(gtfsData) {
+        try {
+            const rwcToSf = [];
+            const sfToRwc = [];
+            
+            // Known station IDs for Redwood City and SF King Street
+            const REDWOOD_CITY_STOP_ID = '70212'; // Redwood City
+            const SF_KING_ST_STOP_ID = '70011';   // San Francisco (King St / 4th St)
+            
+            if (!gtfsData.entity) {
+                console.warn('No entities in GTFS-RT data');
+                return { rwcToSf, sfToRwc };
+            }
+
+            gtfsData.entity.forEach(entity => {
+                if (!entity.tripUpdate || !entity.tripUpdate.stopTimeUpdate) {
+                    return;
+                }
+
+                const trip = entity.tripUpdate.trip;
+                const stopUpdates = entity.tripUpdate.stopTimeUpdate;
+                
+                // Find stops for our stations
+                let rwcStop = null;
+                let sfStop = null;
+                
+                stopUpdates.forEach(stopUpdate => {
+                    if (stopUpdate.stopId === REDWOOD_CITY_STOP_ID) {
+                        rwcStop = stopUpdate;
+                    } else if (stopUpdate.stopId === SF_KING_ST_STOP_ID) {
+                        sfStop = stopUpdate;
+                    }
+                });
+
+                // If we have both stops, determine direction and create train entry
+                if (rwcStop && sfStop) {
+                    const rwcTime = this.extractTime(rwcStop);
+                    const sfTime = this.extractTime(sfStop);
+                    
+                    if (rwcTime && sfTime) {
+                        const train = {
+                            number: trip.tripId || entity.id,
+                            type: 'Local', // Could be enhanced by parsing trip data
+                            departureTime: '',
+                            arrivalTime: '',
+                            duration: ''
+                        };
+
+                        // Determine direction based on time sequence
+                        if (rwcTime < sfTime) {
+                            // RWC to SF direction
+                            train.departureTime = this.formatTimeFromTimestamp(rwcTime);
+                            train.arrivalTime = this.formatTimeFromTimestamp(sfTime);
+                            train.duration = this.calculateDuration(rwcTime, sfTime);
+                            rwcToSf.push(train);
+                        } else {
+                            // SF to RWC direction  
+                            train.departureTime = this.formatTimeFromTimestamp(sfTime);
+                            train.arrivalTime = this.formatTimeFromTimestamp(rwcTime);
+                            train.duration = this.calculateDuration(sfTime, rwcTime);
+                            sfToRwc.push(train);
+                        }
+                    }
+                }
+            });
+
+            // Sort by departure time
+            rwcToSf.sort((a, b) => a.departureTime.localeCompare(b.departureTime));
+            sfToRwc.sort((a, b) => a.departureTime.localeCompare(b.departureTime));
+
+            console.log(`Converted GTFS-RT data: ${rwcToSf.length} RWC→SF trains, ${sfToRwc.length} SF→RWC trains`);
+            
+            return { rwcToSf, sfToRwc };
+            
+        } catch (error) {
+            console.error('Error converting GTFS-RT to our format:', error);
+            return { rwcToSf: [], sfToRwc: [] };
+        }
+    }
+
+    extractTime(stopUpdate) {
+        // Try departure first, then arrival
+        if (stopUpdate.departure && stopUpdate.departure.time) {
+            return parseInt(stopUpdate.departure.time);
+        } else if (stopUpdate.arrival && stopUpdate.arrival.time) {
+            return parseInt(stopUpdate.arrival.time);
+        }
+        return null;
+    }
+
+    formatTimeFromTimestamp(timestamp) {
+        const date = new Date(timestamp * 1000);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+
+    calculateDuration(startTimestamp, endTimestamp) {
+        const durationMinutes = Math.round((endTimestamp - startTimestamp) / 60);
+        const hours = Math.floor(durationMinutes / 60);
+        const minutes = durationMinutes % 60;
+        
+        if (hours === 0) {
+            return `${minutes}m`;
+        } else if (minutes === 0) {
+            return `${hours}h`;
+        } else {
+            return `${hours}h ${minutes}m`;
         }
     }
 
